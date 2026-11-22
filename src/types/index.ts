@@ -1,5 +1,16 @@
 export type SubjectCategory = 'GATE' | 'Placement' | 'Core CS' | 'Aptitude' | 'Other';
 
+export interface UserProfile {
+  id: string; // Google sub id or unique ID
+  name: string;
+  email: string;
+  picture?: string;
+  givenName?: string;
+  familyName?: string;
+  provider: 'google' | 'demo';
+  signedInAt: string;
+}
+
 export interface Subject {
   id: string;
   name: string;

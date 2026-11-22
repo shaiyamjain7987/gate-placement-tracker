@@ -54,7 +54,13 @@ Broaden your worldview beyond engineering with dedicated tracking for 7 core lif
 ### 7. ☀️🌙 Dark & Light Mode Toggle
 - Instant theme toggle in the top navbar with persistent `localStorage` preference.
 
-### 8. 💾 Local Persistence & Data Portability
+### 8. 🔐 Google Authentication (OAuth 2.0 & Identity Services)
+- **Official Google Sign-In**: Powered by Google Identity Services (GSI) for seamless 1-click Google OAuth login.
+- **Account Profile & Status**: Displays Google avatar, full name, email, and active sync badge in the top navbar.
+- **Quick Demo Sign-In**: Instant preview mode to test the authenticated experience without needing cloud credentials.
+- **Flexible OAuth Configuration**: Provide your `VITE_GOOGLE_CLIENT_ID` via `.env` or paste it directly in the in-app Google OAuth Settings modal.
+
+### 9. 💾 Local Persistence & Data Portability
 - Automatic `localStorage` saving.
 - **Export Backup (JSON)** & **Import Backup (JSON)**.
 - Clean start with 0 hours, with optional "Load Demo Data (Preview)" anytime.

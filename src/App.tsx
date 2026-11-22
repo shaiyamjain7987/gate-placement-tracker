@@ -9,6 +9,7 @@ import {
   SubjectCategory,
   LifeField,
   FieldLog,
+  UserProfile,
 } from './types';
 import {
   loadSubjects,
@@ -29,6 +30,11 @@ import {
   saveFieldLogs,
   generateDemoStudyLogs,
 } from './utils/storage';
+import {
+  loadUserProfile,
+  saveUserProfile,
+  clearUserProfile,
+} from './utils/auth';
 import { getTodayStr, calculateStudyStats } from './utils/dateUtils';
 import { playChimeSound, playPingSound } from './utils/audio';
 import confetti from 'canvas-confetti';
@@ -44,6 +50,7 @@ import { NotesSection } from './components/NotesSection';
 import { FocusTimer } from './components/FocusTimer';
 import { RemindersModal } from './components/RemindersModal';
 import { LifeFieldsSection } from './components/LifeFieldsSection';
+import { AuthModal } from './components/AuthModal';
 
 import {
   LayoutDashboard,
@@ -99,6 +106,36 @@ export function App() {
   const [isRemindersOpen, setIsRemindersOpen] = useState(false);
   const [isTimerOpen, setIsTimerOpen] = useState(false);
   const [logModalSubject, setLogModalSubject] = useState<Subject | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  // User Authentication State
+  const [user, setUser] = useState<UserProfile | null>(loadUserProfile);
+  const [isAuthBannerDismissed, setIsAuthBannerDismissed] = useState(false);
+
+  const handleLogin = (newUser: UserProfile) => {
+    setUser(newUser);
+    saveUserProfile(newUser);
+    confetti({
+      particleCount: 60,
+      spread: 70,
+      origin: { y: 0.25 },
+    });
+    playChimeSound();
+    setAlertToast({
+      message: `Welcome, ${newUser.givenName || newUser.name}!`,
+      subtext: `Signed in with ${newUser.provider === 'google' ? 'Google OAuth' : 'Demo Profile'} (${newUser.email})`,
+    });
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    clearUserProfile();
+    playPingSound();
+    setAlertToast({
+      message: 'Signed out successfully.',
+      subtext: 'Your current session has ended.',
+    });
+  };
 
   // In-app Alert Toast
   const [alertToast, setAlertToast] = useState<{ message: string; subtext?: string } | null>(null);
@@ -346,10 +383,64 @@ export function App() {
         onLoadDemoData={handleLoadDemoData}
         theme={theme}
         onToggleTheme={handleToggleTheme}
+        user={user}
+        onOpenAuth={() => setIsAuthModalOpen(true)}
+        onLogout={handleLogout}
       />
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+        {/* Google Authentication Quick Banner */}
+        {!user && !isAuthBannerDismissed && (
+          <div className="flex items-center justify-between p-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 border border-emerald-500/20 text-xs shadow-sm animate-in fade-in">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center shrink-0 shadow-sm">
+                <svg className="w-4 h-4" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <span className="font-semibold text-slate-800 dark:text-slate-100">
+                  Google Authentication is available:
+                </span>{' '}
+                <span className="text-slate-600 dark:text-slate-300">
+                  Sign in with your Google account to associate your study matrix, streaks, and vitamin checklist.
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0 ml-3">
+              <button
+                onClick={() => setIsAuthModalOpen(true)}
+                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm transition-all cursor-pointer"
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => setIsAuthBannerDismissed(true)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer text-xs"
+                title="Dismiss banner"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Navigation Tabs */}
         <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
           <div className="flex items-center gap-1.5 bg-slate-200/80 dark:bg-slate-900 p-1 rounded-2xl border border-slate-300 dark:border-slate-800">
@@ -582,6 +673,15 @@ export function App() {
         onClose={() => setIsRemindersOpen(false)}
         reminders={reminders}
         onUpdateReminders={handleUpdateReminders}
+      />
+
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        user={user}
+        onLogin={handleLogin}
+        onLogout={handleLogout}
+        theme={theme}
       />
 
       {/* Footer */}
